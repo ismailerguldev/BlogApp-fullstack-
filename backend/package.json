@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/ismailerguldev/BlogApp-fullstack-#readme",
   "dependencies": {
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "bcrypt": "^6.0.0",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.7",
