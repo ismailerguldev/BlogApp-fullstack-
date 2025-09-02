@@ -18,6 +18,10 @@ const CommentSchema = new Schema({
     commentAt: {
         type: Date,
         default: Date.now
+    },
+    replyCount: {
+        type: Number,
+        default: 0
     }
 
     ,

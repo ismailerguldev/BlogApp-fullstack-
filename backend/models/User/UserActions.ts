@@ -103,3 +103,34 @@ export const handleFollow = async (follower_id: string, followed_id: string) => 
         console.error(error)
     }
 }
+export const changeUsername = async (user_id: string, username: string) => {
+    try {
+        const user = await User.findByIdAndUpdate(
+            user_id,
+            {
+                $set: {
+                    username: username
+                }
+            }
+        )
+        return user
+    } catch (error) {
+        console.log(error)
+    }
+}
+export const changePassword = async (user_id: string, password: string) => {
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10)
+        const user = await User.findByIdAndUpdate(
+            user_id,
+            {
+                $set: {
+                    password: hashedPassword
+                }
+            }
+        )
+        return user
+    } catch (error) {
+        console.log(error)
+    }
+}
