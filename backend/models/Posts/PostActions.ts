@@ -1,10 +1,9 @@
 import Post from "./Post.ts"
-import Like from "./Likes.ts"
 import mongoose from "mongoose"
 import Likes from "./Likes.ts"
 import Comments from "./Comments.ts"
 import Replies from "./Replies.ts"
-export const loadPosts = async (page: number, pageSize: number): Promise<object[]> => {
+const loadPosts = async (page: number, pageSize: number) => {
     try {
         const result = await Post.aggregate([
             {
@@ -47,7 +46,7 @@ export const loadPosts = async (page: number, pageSize: number): Promise<object[
         return []
     }
 }
-export const addPost = async (title: string, body: string, user_id: string): Promise<object> => {
+const addPost = async (title: string, body: string, user_id: string) => {
     try {
         const newPost = await Post.create({
             title, body, user_id,
@@ -58,7 +57,7 @@ export const addPost = async (title: string, body: string, user_id: string): Pro
         throw new Error("An error occured while adding post")
     }
 }
-export const getPost = async (id: string): Promise<object> => {
+const getPost = async (id: string) => {
     try {
         const post = await Post.findById(id)
         if (post) {
@@ -71,8 +70,9 @@ export const getPost = async (id: string): Promise<object> => {
         return {}
     }
 }
-export const searchPost = async (search: string, limit: number = 5): Promise<object[]> => {
+const searchPost = async (search: string, limit: number = 5) => {
     try {
+        if (!search || search === "") throw new Error("No search query")
         const result = await Post.aggregate([
             {
                 $search: {
@@ -115,7 +115,7 @@ export const searchPost = async (search: string, limit: number = 5): Promise<obj
     }
 };
 
-export const getUserPosts = async (user_id: string, page: number, pageSize: number): Promise<object[]> => {
+const getUserPosts = async (user_id: string, page: number, pageSize: number) => {
     try {
         const posts = await Post.aggregate([
             {
@@ -176,13 +176,13 @@ export const getUserPosts = async (user_id: string, page: number, pageSize: numb
     }
 }
 
-export const delPost = async (_id: string, user_id: string) => {
+const delPost = async (_id: string, user_id: string) => {
     try {
         const post = await Post.findById(_id)
         if (!post) {
             throw new Error("Post not found")
         }
-        if (post._id.toString() !== user_id) {
+        if (post.user_id.toString() !== user_id) {
             throw new Error("You haven't access to delete this post!")
         }
         const deleted = await Post.deleteOne({ _id })
@@ -192,7 +192,7 @@ export const delPost = async (_id: string, user_id: string) => {
     }
 }
 
-export const updatePost = async (_id: string, user_id: string, data: { title: string, body: string }): Promise<object> => {
+const updatePost = async (_id: string, user_id: string, data: { title: string, body: string }) => {
     try {
         const post = await Post.findOneAndUpdate(
             { _id: new mongoose.Types.ObjectId(_id), user_id: new mongoose.Types.ObjectId(user_id) },
@@ -211,12 +211,12 @@ export const updatePost = async (_id: string, user_id: string, data: { title: st
         }
         return post
     } catch (error) {
-        console.error(error)
+        console.error("An error occured while update Post", error)
         return {}
     }
 }
 
-export const hanldeLikePost = async (_id: string, user_id: string) => {
+const handleLikePost = async (_id: string, user_id: string) => {
     try {
         const like = await Likes.findOneAndUpdate(
             { post_id: new mongoose.Types.ObjectId(_id), user_id: new mongoose.Types.ObjectId(user_id), },
@@ -255,7 +255,7 @@ export const hanldeLikePost = async (_id: string, user_id: string) => {
         throw new Error(error)
     }
 }
-export const addComment = async (post_id: string, user_id: string, commentText: string) => {
+const addComment = async (post_id: string, user_id: string, commentText: string) => {
     try {
         const comment = await Comments.create({
             post_id: new mongoose.Types.ObjectId(post_id),
@@ -278,7 +278,7 @@ export const addComment = async (post_id: string, user_id: string, commentText: 
         console.log(error)
     }
 }
-export const editComment = async (comment_id: string, user_id: string, editCommentText: string) => {
+const editComment = async (comment_id: string, user_id: string, editCommentText: string) => {
     try {
         const editedComment = await Comments.findOneAndUpdate(
             { _id: new mongoose.Types.ObjectId(comment_id), user_id: new mongoose.Types.ObjectId(user_id) },
@@ -294,11 +294,12 @@ export const editComment = async (comment_id: string, user_id: string, editComme
         console.log(error)
     }
 }
-export const deleteComment = async (comment_id: string, user_id: string, post_id: string) => {
+const deleteComment = async (comment_id: string, user_id: string) => {
     try {
         const comment = await Comments.findOneAndDelete(
             { _id: new mongoose.Types.ObjectId(comment_id), user_id: new mongoose.Types.ObjectId(user_id) },
         )
+        const post_id = comment?.post_id
         const post = await Post.findOneAndUpdate(
             { _id: post_id },
             {
@@ -315,47 +316,41 @@ export const deleteComment = async (comment_id: string, user_id: string, post_id
         console.log(error)
     }
 }
-export const addReply = async (comment_id: string, user_id: string, replyText: string, post_id: string) => {
+const addReply = async (comment_id: string, user_id: string, replyText: string) => {
     try {
-        const [reply, post, comment] = await Promise.all(
-            [
-                Replies.create({
-                    user_id: new mongoose.Types.ObjectId(user_id),
-                    comment_id: new mongoose.Types.ObjectId(comment_id),
-                    replyText: replyText
-                }),
-                Post.findOneAndUpdate(
-                    { _id: new mongoose.Types.ObjectId(post_id) },
-                    {
-                        $inc: {
-                            commentCount: 1
-                        }
-                    },
-                    {
-                        new: true
-                    }
-                ),
-                Comments.findOneAndUpdate(
-                    {
-                        _id: new mongoose.Types.ObjectId(comment_id)
-                    },
-                    {
-                        $inc: {
-                            replyCount: 1
-                        }
-                    },
-                    { new: true }
-                )
-
-
-            ]
+        const reply = await Replies.create({
+            user_id: new mongoose.Types.ObjectId(user_id),
+            comment_id: new mongoose.Types.ObjectId(comment_id),
+            replyText: replyText
+        })
+        const comment = await Comments.findOneAndUpdate(
+            {
+                _id: new mongoose.Types.ObjectId(comment_id)
+            },
+            {
+                $inc: {
+                    replyCount: 1
+                }
+            },
+            { new: true }
+        )
+        const post = await Post.findOneAndUpdate(
+            { _id: comment?.post_id },
+            {
+                $inc: {
+                    commentCount: 1
+                }
+            },
+            {
+                new: true
+            }
         )
         return { reply, post, comment }
     } catch (error) {
         console.log(error)
     }
 }
-export const editReply = async (reply_id: string, user_id: string, editReplyText: string) => {
+const editReply = async (reply_id: string, user_id: string, editReplyText: string) => {
     try {
         const editedReply = await Replies.findOneAndUpdate(
             { _id: new mongoose.Types.ObjectId(reply_id), user_id: new mongoose.Types.ObjectId(user_id) },
@@ -371,14 +366,23 @@ export const editReply = async (reply_id: string, user_id: string, editReplyText
         console.log(error)
     }
 }
-export const deleteReply = async (comment_id: string, reply_id: string, user_id: string, post_id: string) => {
+const deleteReply = async (reply_id: string, user_id: string,) => {
     try {
         const reply = await Replies.findOneAndDelete(
             { _id: new mongoose.Types.ObjectId(reply_id), user_id: new mongoose.Types.ObjectId(user_id) },
         )
+        const comment = await Comments.findOneAndUpdate(
+            { _id: reply?.comment_id },
+            {
+                $inc: {
+                    replyCount: -1
+                }
+            },
+            { new: true }
+        )
         if (!reply) return null
         const post = await Post.findOneAndUpdate(
-            { _id: new mongoose.Types.ObjectId(post_id) },
+            { _id: comment?.post_id },
             {
                 $inc: {
                     commentCount: -1
@@ -388,17 +392,10 @@ export const deleteReply = async (comment_id: string, reply_id: string, user_id:
                 new: true
             }
         )
-        const comment = await Comments.findOneAndUpdate(
-            { _id: new mongoose.Types.ObjectId(comment_id) },
-            {
-                $inc: {
-                    replyCount: -1
-                }
-            },
-            { new: true }
-        )
+        
         return { comment, post, reply }
     } catch (error) {
         console.log(error)
     }
 }
+export default { loadPosts, addPost, getPost, searchPost, getUserPosts, delPost, updatePost, handleLikePost, addComment, editComment, deleteComment, addReply, editReply, deleteReply }

@@ -20,4 +20,4 @@ const ReplySchema = new Schema({
     }
 }, { timestamps: true });
 
-export default mongoose.model("Post", ReplySchema);
+export default mongoose.model("Reply", ReplySchema);

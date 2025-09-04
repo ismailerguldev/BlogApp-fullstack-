@@ -3,7 +3,10 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Follow from "./Follow.ts";
 import mongoose from "mongoose";
-export const registerUser = async (username: string, email: string, password: string): Promise<object> => {
+import crypto, { verify } from "crypto"
+import { sendVerificationCode } from "../../services/emailVerification.ts";
+import redisClient from "../../config/redis.ts";
+const registerUser = async (username: string, email: string, password: string) => {
     try {
         const existingUser = await User.findOne({ email })
         if (existingUser) throw new Error("This user already registered.")
@@ -11,6 +14,10 @@ export const registerUser = async (username: string, email: string, password: st
         const user = await User.create({
             username, email, password: hashedPassword
         })
+        console.log(password, "registerUser passwordu")
+        const verificationCode = crypto.randomInt(100000, 999999).toString()
+        await redisClient.setEx(`verify:${user._id}`, 600, verificationCode)
+        sendVerificationCode(user.email, verificationCode)
         if (user) {
             return user
         } else {
@@ -20,11 +27,23 @@ export const registerUser = async (username: string, email: string, password: st
         throw new Error(`An error occured while register user ${error}`)
     }
 }
-export const login = async (email: string, password: string): Promise<object> => {
+const verifyUser = async (user_id: string, verificationCode: string) => {
+    const storedCode = await redisClient.get(`verify:${user_id}`)
+    if (!storedCode) throw new Error("Code Expired")
+    if (storedCode !== verificationCode) throw new Error("Invalid Code")
+    const user = await User.findByIdAndUpdate(user_id, { emailVerified: true }, { new: true })
+    if (!user) throw new Error("Error while getting user in verifyuser")
+    await redisClient.del(`verify:${user_id}`)
+    return user
+}
+const loginUser = async (email: string, password: string) => {
     try {
         const user = await User.findOne({ email })
         if (!user) throw new Error("This email is not registered yet!")
+        console.log(password, " loginUser passwordu")
+        console.log(user.emailVerified)
         if (!await bcrypt.compare(password, user.password)) throw new Error("Invalid E-Mail or Password!")
+        if (!user.emailVerified) throw new Error("E-mail verification is neccessary.")
         const token = jwt.sign(
             { user_id: user._id, username: user.username },
             process.env.JWT_SECRET!,
@@ -39,12 +58,13 @@ export const login = async (email: string, password: string): Promise<object> =>
                 totalPost: user.totalPost
             },
             token: token
+
         }
     } catch (error) {
         throw new Error(`An error occured while Logging: ${error}`)
     }
 }
-export const handleFollow = async (follower_id: string, followed_id: string) => {
+const handleFollow = async (follower_id: string, followed_id: string) => {
     try {
         const follow = await Follow.findOneAndUpdate(
             { follower_id: new mongoose.Types.ObjectId(follower_id), followed_id: new mongoose.Types.ObjectId(followed_id) },
@@ -100,10 +120,10 @@ export const handleFollow = async (follower_id: string, followed_id: string) => 
         }
     }
     catch (error) {
-        console.error(error)
+        throw new Error(error)
     }
 }
-export const changeUsername = async (user_id: string, username: string) => {
+const changeUsername = async (user_id: string, username: string) => {
     try {
         const user = await User.findByIdAndUpdate(
             user_id,
@@ -115,10 +135,10 @@ export const changeUsername = async (user_id: string, username: string) => {
         )
         return user
     } catch (error) {
-        console.log(error)
+        throw new Error(error)
     }
 }
-export const changePassword = async (user_id: string, password: string) => {
+const changePassword = async (user_id: string, password: string) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10)
         const user = await User.findByIdAndUpdate(
@@ -134,3 +154,4 @@ export const changePassword = async (user_id: string, password: string) => {
         console.log(error)
     }
 }
+export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser }

@@ -27,6 +27,10 @@ const UserSchema = new Schema({
     joinedAt: {
         type: Date,
         default: Date.now
+    },
+    emailVerified:{
+        type:Boolean,
+        default:false
     }
 }, { timestamps: true })
 const UserModel = mongoose.model("User", UserSchema)

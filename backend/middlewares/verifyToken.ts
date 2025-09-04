@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
-interface AuthRequest extends Request {
+import { config } from "../config/config.ts"
+
+export interface AuthRequest extends Request {
     user?: any
 }
 export const tokenVerify = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -9,7 +11,7 @@ export const tokenVerify = (req: AuthRequest, res: Response, next: NextFunction)
         if (!token) {
             return res.status(401).json({ message: "No token found" })
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+        const decoded = jwt.verify(token, config.JWT_SECRET!)
         req.user = decoded
         next()
     } catch (error) {
