@@ -11,25 +11,29 @@ import { VStack } from '@/components/ui/vstack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IPost } from '@/src/models/PostModel';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Spinner } from '@/components/ui/spinner';
 export function Home() {
   const insets = useSafeAreaInsets()
-  const { width } = Dimensions.get("screen")
-  const [token, setToken] = useState<string>()
-  const [postFeed, setPostFeed] = useState<IPost[]>()
-  const [refreshing, setRefreshing] = useState(false);
+  const [postFeed, setPostFeed] = useState<IPost[]>([])
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1)
+  const [loadingMore, setLoadingMore] = useState(false);
   const onRefresh = useCallback(async () => {
-    await getToken()
     setRefreshing(true);
+    setPage(1)
+    setPostFeed([])
     await getPosts();
     setRefreshing(false);
   }, []);
   const getToken = async () => {
     const token = await AsyncStorage.getItem("token")
-    setToken(token!)
+    return token
   }
   const getPosts = async () => {
+    if (loadingMore) return
+    setLoadingMore(true)
     try {
-      const page = 1
+      const token = await getToken()
       const pageSize = 5
       const res = await fetch(`http://192.168.1.76:5000/post/getPosts/${page}/${pageSize}`, {
         method: "GET",
@@ -43,23 +47,23 @@ export function Home() {
         return
       }
       const posts = await res.json()
-      setPostFeed(posts.data)
+      setPostFeed((prev) => [ ...prev,...posts.data]);
+      setPage(prev => prev + 1)
+      if (page === posts.totalPages) {
+        setLoadingMore(false)
+      }
     } catch (error) {
       console.log("error!", error)
+    } finally {
+      setLoadingMore(false)
     }
   }
   useEffect(() => {
     (async () => {
-      await getToken()
+      await getPosts()
     })()
   }, [])
-  useEffect(() => {
-    if (token) {
-      getPosts();
-    }
-  }, [token]);
   return (
-    // <ScrollView style={{ paddingTop: insets.top, padding: 20, backgroundColor: "#17181c", }} contentContainerStyle={{ paddingBottom: insets.bottom }}>
     <View style={{ flex: 1, backgroundColor: "#17181c" }}>
       <FlatList data={postFeed} keyExtractor={(item) => item._id}
         ListHeaderComponent={HeadingSection}
@@ -77,8 +81,15 @@ export function Home() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        onEndReached={getPosts}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <Spinner size="large" color="grey" />
+        }
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
     </View>
-    // </ScrollView >
   );
 }

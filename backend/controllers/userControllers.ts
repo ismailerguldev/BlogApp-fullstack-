@@ -18,6 +18,21 @@ export const login = async (req: Request, res: Response) => {
     const { user } = await UserActions.loginUser(req.body.email, req.body.password)
     res.status(200).json(user)
 }
+export const autoLogin = async (req: Request, res: Response) => {
+    try {
+        const token = req.headers["authorization"]?.split(" ")[1]
+        if (!token) {
+            return res.status(401).json({ message: "Bad request. Token not found." })
+        }
+        const user = await UserActions.autoLogin(token)
+        if (!user) {
+            return res.status(404).json({ message: "User not found." })
+        }
+        res.status(200).json(user)
+    } catch (error: any) {
+        res.status(401).json({ message: "Invalid or expired token" })
+    }
+}
 export const follow = async (req: AuthRequest, res: Response) => {
     const follow = await UserActions.handleFollow(req.user.user_id, req.params.followed_id)
     res.status(200).json(

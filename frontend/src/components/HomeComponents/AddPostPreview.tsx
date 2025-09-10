@@ -1,4 +1,4 @@
-import { View, Text, Image, Dimensions, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { View, Text, Image, Dimensions, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { HStack } from '@/components/ui/hstack'
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar'
@@ -7,7 +7,8 @@ import { EllipsisVertical, Heart, MessageCircle } from 'lucide-react-native'
 import { TextareaInput } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAppSelector } from '@/src/redux/hooks'
-const AddPostPreview = () => {
+import AsyncStorage from '@react-native-async-storage/async-storage'
+const AddPostPreview = ({ setTitle, setBody, body, title }: any) => {
     const { width, height } = Dimensions.get("screen")
     const [imageLoaded, set] = useState<boolean>(false)
     const user = useAppSelector((state) => state.user)
@@ -28,12 +29,15 @@ const AddPostPreview = () => {
                 </HStack>
                 <EllipsisVertical color={"white"} />
             </HStack>
+            <TextInput maxLength={35} onChangeText={(text) => setTitle(text)}>
+                <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>{title}</Text>
+            </TextInput>
             {
-                imageLoaded ? <Image source={{ uri: "https://picsum.photos/1000" }} style={{ height: height * 0.25, borderRadius: 15, }} /> : <Skeleton speed={15} variant="sharp" style={{height: height * 0.25, borderRadius: 15}} />
+                imageLoaded ? <Image source={{ uri: "https://picsum.photos/1000" }} style={{ height: height * 0.25, borderRadius: 15, }} /> : <Skeleton speed={15} variant="sharp" style={{ height: height * 0.25, borderRadius: 15 }} />
             }
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <TextInput maxLength={230} multiline>
-                    <Text className='text-white'>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Omnis odit labore sapiente deserunt. Repellat placeat facilis quod, blanditiis sed possimus, nesciunt necessitatibus neque repudiandae, sequi ut beatae eveniet enim maxime.</Text>
+                <TextInput maxLength={230} multiline onChangeText={(text) => setBody(text)}>
+                    <Text className='text-white'>{body}</Text>
                 </TextInput>
             </TouchableWithoutFeedback>
             <HStack className='items-center gap-4'>

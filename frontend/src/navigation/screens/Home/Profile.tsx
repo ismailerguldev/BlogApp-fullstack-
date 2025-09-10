@@ -10,7 +10,7 @@ import ProfilePosts from '@/src/components/HomeComponents/ProfilePosts';
 import { Text } from '@/components/ui/text';
 import { StaticScreenProps } from '@react-navigation/native';
 import { HomeIcon, Lock, LogOut, Menu, ShoppingCart, User, Wallet } from 'lucide-react-native';
-import { memo, useState } from 'react';
+import { memo, useContext, useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -25,6 +25,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Home } from './Home';
 import { useAppSelector } from '@/src/redux/hooks';
+import { AuthContext } from '@/src/auth/authContext';
 type Props = StaticScreenProps<{
   user: string;
 }>;
@@ -33,6 +34,7 @@ type Props = StaticScreenProps<{
   const { top, bottom } = useSafeAreaInsets()
   const [showDrawer, setShowDrawer] = useState(false);
   const user = useAppSelector((state) => state.user)
+  const {signOut} = useContext(AuthContext)
   return (
     <ScrollView style={{ backgroundColor: "#17181c", flex: 1 }} contentContainerStyle={{ paddingBottom: bottom * 0.1 }}>
       <VStack style={{ alignItems: "center", gap: 20, padding: 15, paddingTop: top * 1.4, }}>
@@ -73,6 +75,7 @@ type Props = StaticScreenProps<{
                   className="w-full gap-2"
                   variant="outline"
                   action="secondary"
+                  onPress={() => signOut() }
                 >
                   <ButtonText>Logout</ButtonText>
                   <ButtonIcon as={LogOut} />
@@ -94,10 +97,6 @@ type Props = StaticScreenProps<{
           <VStack style={{ justifyContent: "center", alignItems: "center" }}>
             <Text style={{ color: "white", fontSize: 16, }}>{user.followings}</Text>
             <Text style={{ color: "white", fontSize: 16, }}>Followings</Text>
-          </VStack>
-          <VStack style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 16, }}>{user.likeCount}</Text>
-            <Text style={{ color: "white", fontSize: 16, }}>Likes</Text>
           </VStack>
         </HStack>
         <TouchableOpacity style={{ width: width * 0.6, justifyContent: "center", alignItems: "center", backgroundColor: "#2E2E2E", borderRadius: 5, alignSelf: "center", padding: 15 }}>

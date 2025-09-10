@@ -1,31 +1,55 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import React from "react";
 import { useAppDispatch } from "../redux/hooks";
-import { setUser } from "../redux/slices/userSlice";
+import { removeUser, setUser } from "../redux/slices/userSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage"
-interface IUser {
-    username: string,
-}
+import { IUser } from "../models/UserModel";
 interface IContext {
     isAuth: boolean,
     isVerified: boolean,
     signIn: (email: string, password: string) => Promise<any>,
     verificateEmail: (user_id: string, code: string) => Promise<any>
-    signOut: () => void
+    signOut: () => Promise<void>
 }
 export const AuthContext = createContext<IContext>(
     {
         isAuth: false,
         isVerified: false,
-        signIn: async () => { },
-        signOut: () => { },
-        verificateEmail: async () => { }
+        signIn: async () => {},
+        signOut: async () => {},
+        verificateEmail: async () => {}
     }
 );
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isAuth, setIsAuth] = useState<boolean>(false)
     const [isVerified, setIsVerified] = useState<boolean>(false)
     const dispatch = useAppDispatch()
+    const tryAutoLogin = async () => {
+        const token = await AsyncStorage.getItem("token")
+        if (!token) throw new Error("Token not found. Autologin canceled.")
+        await fetch("http://192.168.1.76:5000/user/autoLogin", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        }).then(async res => {
+            if (!res.ok) {
+                const error = await res.text()
+                throw new Error(error.toString())
+            }
+            return res.json()
+        }).then(data => {
+            dispatch(setUser(data))
+            setIsAuth(true)
+            setIsVerified(true)
+        })
+    }
+    useEffect(() => {
+        (async () => {
+            await tryAutoLogin()
+        })()
+    }, [])
     const signIn = async (email: string, password: string) => {
         try {
             const res = await fetch("http://192.168.1.76:5000/user/login",
@@ -59,8 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             )
             const data = await res.json()
             if (data) {
-                console.log(data.token)
-                await AsyncStorage.setItem("token",data.token)
+                await AsyncStorage.setItem("token", data.token)
                 dispatch(setUser(data.user))
                 setIsVerified(true)
                 return data
@@ -69,10 +92,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             throw new Error("An error occured while verify", error)
         }
     }
-    const signOut = () => {
+    const signOut = async () => {
         // çıkış yapılıyor
+        dispatch(removeUser())
         setIsAuth(false)
         setIsVerified(false)
+        await AsyncStorage.removeItem("token")
     }
     return (
         <AuthContext.Provider value={{ isAuth, isVerified, signIn, signOut, verificateEmail }}>

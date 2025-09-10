@@ -1,11 +1,13 @@
 import User from "./User.ts";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import type { JwtPayload } from "jsonwebtoken";
 import Follow from "./Follow.ts";
 import mongoose from "mongoose";
 import crypto, { verify } from "crypto"
 import { sendVerificationCode } from "../../services/emailVerification.ts";
 import redisClient from "../../config/redis.ts";
+import { config } from "../../config/config.ts";
 const registerUser = async (username: string, email: string, password: string) => {
     try {
         const existingUser = await User.findOne({ email })
@@ -46,12 +48,28 @@ const verifyUser = async (user_id: string, verificationCode: string) => {
         token: token
     }
 }
+const autoLogin = async (token: string) => {
+    const decoded = jwt.verify(token!, config.JWT_SECRET as string) as JwtPayload
+    const username: string = decoded.username as string
+    const user_id: string = decoded.user_id as string
+    const user = await User.findOne({ username, _id: new mongoose.Types.ObjectId(user_id) })
+    if (!user) {
+        throw new Error("User not found. Autologin canceled.")
+    } else {
+        return {
+            username: user.username,
+            email: user.email,
+            totalPost: user.totalPost,
+            followers: user.followers,
+            followings: user.followings
+        }
+    }
+
+}
 const loginUser = async (email: string, password: string) => {
     try {
         const user = await User.findOne({ email })
         if (!user) throw new Error("This email is not registered yet!")
-        console.log(password, " loginUser passwordu")
-        console.log(user.emailVerified)
         if (!await bcrypt.compare(password, user.password)) throw new Error("Invalid E-Mail or Password!")
         const verificationCode = crypto.randomInt(100000, 999999).toString()
         await redisClient.setEx(`verify:${user._id}`, 86400, verificationCode)
@@ -159,4 +177,4 @@ const changePassword = async (user_id: string, password: string) => {
         console.log(error)
     }
 }
-export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser }
+export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser, autoLogin }

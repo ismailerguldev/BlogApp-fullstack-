@@ -17,7 +17,7 @@ const loadPosts = async (page: number, pageSize: number) => {
                             { $limit: pageSize },
                             {
                                 $project:
-                                    { title: 1, createdAt: 1, body: 1, likeCount: 1, commentCount: 1, user_id: 1, username:1 }
+                                    { title: 1, createdAt: 1, body: 1, likeCount: 1, commentCount: 1, user_id: 1, username: 1 }
                             }
                         ],
                     totalCount: [{ $count: "count" }]
@@ -51,7 +51,7 @@ const addPost = async (title: string, body: string, user_id: string) => {
     try {
         const user = await User.findById(new mongoose.Types.ObjectId(user_id))
         const newPost = await Post.create({
-            title, body, user_id, username:user!.username
+            title, body, user_id, username: user!.username
         })
         console.log(newPost)
         return newPost
@@ -103,6 +103,7 @@ const searchPost = async (search: string, limit: number = 5) => {
             { $limit: limit },
             {
                 $project: {
+                    username: 1,
                     title: 1,
                     body: 1,
                     createdAt: 1,
@@ -111,9 +112,9 @@ const searchPost = async (search: string, limit: number = 5) => {
         ]);
 
         return result;
-    } catch (error) {
+    } catch (error:any) {
         console.error("Error while searching posts:", error);
-        throw new Error("An error occurred while searching posts");
+        throw new Error(`An error occurred while searching posts, error`);
     }
 };
 

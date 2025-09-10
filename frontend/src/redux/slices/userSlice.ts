@@ -24,9 +24,20 @@ export const userSlice = createSlice({
         setUser: (state, action: PayloadAction<IUser>) => {
             return action.payload
         },
+        removeUser: (state) => {
+            return {
+                followers: 0,
+                followings: 0, 
+                totalPost: 0, 
+                user_id: "", 
+                username: "", 
+                email: "", 
+                likeCount: 0
+            }
+        }
     },
 })
 
-export const { setUser } = userSlice.actions
+export const { setUser, removeUser } = userSlice.actions
 
 export default userSlice.reducer

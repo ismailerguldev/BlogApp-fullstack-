@@ -19,11 +19,11 @@ const Blog = ({ username, title, body, commentCount, likeCount, createdAt }: IPo
                     </Avatar>
                     <VStack>
                         <Text className='font-bold text-xl text-white '>{username}</Text>
-                        {/* <Text className='font-bold text-lg text-gray-400'>{createdAt.toLocaleDateString("en-US", { timeZone: "UTC", hourCycle: 'h24', })}</Text> */}
                     </VStack>
                 </HStack>
                 <EllipsisVertical color={"white"} />
             </HStack>
+            <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>{title}</Text>
             <Image source={{ uri: "https://picsum.photos/1000" }} style={{ height: height * 0.25, borderRadius: 15, }} />
             <Text className='text-white'>{body}</Text>
             <HStack className='items-center gap-4'>
