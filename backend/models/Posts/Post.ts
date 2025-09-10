@@ -7,6 +7,7 @@ const PostSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
   isPrivate: { type: Boolean, default: false },
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  username: { type: String, required: true, ref: "User" },
   likeCount: { type: Number, default: 0 },
   commentCount: { type: Number, default: 0 }
 }, { timestamps: true });

@@ -14,10 +14,6 @@ const registerUser = async (username: string, email: string, password: string) =
         const user = await User.create({
             username, email, password: hashedPassword
         })
-        console.log(password, "registerUser passwordu")
-        const verificationCode = crypto.randomInt(100000, 999999).toString()
-        await redisClient.setEx(`verify:${user._id}`, 600, verificationCode)
-        sendVerificationCode(user.email, verificationCode)
         if (user) {
             return user
         } else {
@@ -34,7 +30,21 @@ const verifyUser = async (user_id: string, verificationCode: string) => {
     const user = await User.findByIdAndUpdate(user_id, { emailVerified: true }, { new: true })
     if (!user) throw new Error("Error while getting user in verifyuser")
     await redisClient.del(`verify:${user_id}`)
-    return user
+    const token = jwt.sign(
+        { user_id: user._id, username: user.username },
+        process.env.JWT_SECRET!,
+        { expiresIn: "1d" }
+    )
+    return {
+        user: {
+            user_id: user._id,
+            username: user.username,
+            followers: user.followers,
+            followings: user.followings,
+            totalPost: user.totalPost
+        },
+        token: token
+    }
 }
 const loginUser = async (email: string, password: string) => {
     try {
@@ -43,12 +53,9 @@ const loginUser = async (email: string, password: string) => {
         console.log(password, " loginUser passwordu")
         console.log(user.emailVerified)
         if (!await bcrypt.compare(password, user.password)) throw new Error("Invalid E-Mail or Password!")
-        if (!user.emailVerified) throw new Error("E-mail verification is neccessary.")
-        const token = jwt.sign(
-            { user_id: user._id, username: user.username },
-            process.env.JWT_SECRET!,
-            { expiresIn: "1d" }
-        )
+        const verificationCode = crypto.randomInt(100000, 999999).toString()
+        await redisClient.setEx(`verify:${user._id}`, 86400, verificationCode)
+        sendVerificationCode(user.email, verificationCode)
         return {
             user: {
                 user_id: user._id,
@@ -57,8 +64,6 @@ const loginUser = async (email: string, password: string) => {
                 followings: user.followings,
                 totalPost: user.totalPost
             },
-            token: token
-
         }
     } catch (error) {
         throw new Error(`An error occured while Logging: ${error}`)

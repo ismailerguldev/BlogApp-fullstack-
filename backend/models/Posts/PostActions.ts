@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 import Likes from "./Likes.ts"
 import Comments from "./Comments.ts"
 import Replies from "./Replies.ts"
+import User from "../User/User.ts"
 const loadPosts = async (page: number, pageSize: number) => {
     try {
         const result = await Post.aggregate([
@@ -16,7 +17,7 @@ const loadPosts = async (page: number, pageSize: number) => {
                             { $limit: pageSize },
                             {
                                 $project:
-                                    { title: 1, createdAt: 1, body: 1 }
+                                    { title: 1, createdAt: 1, body: 1, likeCount: 1, commentCount: 1, user_id: 1, username:1 }
                             }
                         ],
                     totalCount: [{ $count: "count" }]
@@ -48,8 +49,9 @@ const loadPosts = async (page: number, pageSize: number) => {
 }
 const addPost = async (title: string, body: string, user_id: string) => {
     try {
+        const user = await User.findById(new mongoose.Types.ObjectId(user_id))
         const newPost = await Post.create({
-            title, body, user_id,
+            title, body, user_id, username:user!.username
         })
         console.log(newPost)
         return newPost
@@ -392,7 +394,7 @@ const deleteReply = async (reply_id: string, user_id: string,) => {
                 new: true
             }
         )
-        
+
         return { comment, post, reply }
     } catch (error) {
         console.log(error)

@@ -1,24 +1,24 @@
 import nodemailer from "nodemailer"
 import { config } from "../config/config.ts";
 export const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: config.VERIFICATION_EMAIL,
-        pass: config.VERIFICATION_PASSWORD,
-    }
+  service: "gmail",
+  auth: {
+    user: config.VERIFICATION_EMAIL,
+    pass: config.VERIFICATION_PASSWORD,
+  }
 })
 export const emailVerification = async () => {
-    transporter.verify((error, success) => {
-        if (error) throw new Error(`An error occured while email verify, ${error}`);
-        console.log("Ready for send verification code")
-    })
+  transporter.verify((error, success) => {
+    if (error) throw new Error(`An error occured while email verify, ${error}`);
+    console.log("Ready for send verification code")
+  })
 }
 export const sendVerificationCode = async (email: string, verificationCode: string,) => {
-    await transporter.sendMail({
-        from: config.VERIFICATION_EMAIL,
-        to: email,
-        subject: "Your Blog App Verification Code",
-        html: `
+  await transporter.sendMail({
+    from: config.VERIFICATION_EMAIL,
+    to: email,
+    subject: "Your Blog App Verification Code",
+    html: `
   <!DOCTYPE html>
   <html>
   <head>
@@ -65,5 +65,5 @@ export const sendVerificationCode = async (email: string, verificationCode: stri
   </body>
   </html>
   `
-    })
+  })
 }

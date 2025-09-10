@@ -15,13 +15,8 @@ export const verify = async (req: Request, res: Response) => {
     res.status(200).json(user)
 }
 export const login = async (req: Request, res: Response) => {
-    const data = await UserActions.loginUser(req.body.email, req.body.password)
-    res.status(200).json(
-        {
-            user: data.user,
-            token: data.token
-        }
-    )
+    const { user } = await UserActions.loginUser(req.body.email, req.body.password)
+    res.status(200).json(user)
 }
 export const follow = async (req: AuthRequest, res: Response) => {
     const follow = await UserActions.handleFollow(req.user.user_id, req.params.followed_id)

@@ -10,11 +10,13 @@ export const addPost = async (req: AuthRequest, res: Response) => {
         }
     )
 }
+export const feedPosts = async (req: AuthRequest, res: Response) => {
+    const posts = await PostActions.loadPosts(parseInt(req.params.page), parseInt(req.params.pageSize))
+    res.status(200).json(posts)
+}
 export const getPost = async (req: Request, res: Response) => {
     const post = await PostActions.getPost(req.params.post_id)
-    res.status(200).json({
-        post
-    })
+    res.status(200).json(post)
 }
 export const search = async (req: Request, res: Response) => {
     const search = req.query.search?.toString() || ""

@@ -1,6 +1,6 @@
 import express from "express"
 import { tokenVerify } from "../middlewares/verifyToken.ts"
-import { addComment, addPost, addReply, deleteComment, deletePost, deleteReply, editComment, editReply, getPost, getUserPosts, likePost, search, updatePost } from "../controllers/postControllers.ts"
+import { addComment, addPost, addReply, deleteComment, deletePost, deleteReply, editComment, editReply, feedPosts, getPost, getUserPosts, likePost, search, updatePost } from "../controllers/postControllers.ts"
 const router = express.Router()
 router.route("/").get((req, res) => {
     res.status(200).json({ message: "oldu" })
@@ -8,6 +8,7 @@ router.route("/").get((req, res) => {
 router.route("/create").post(tokenVerify, addPost)
 router.route("/search").get(search)
 router.route("/user").get(tokenVerify, getUserPosts)
+router.route('/getPosts/:page/:pageSize').get(tokenVerify, feedPosts)
 router.route("/:post_id")
     .get(getPost)
     .delete(tokenVerify, deletePost)
