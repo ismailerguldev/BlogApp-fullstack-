@@ -7,7 +7,7 @@ router.route("/").get((req, res) => {
 })
 router.route("/create").post(tokenVerify, addPost)
 router.route("/search").get(search)
-router.route("/user").get(tokenVerify, getUserPosts)
+router.route("/user/:page/:pageSize").get(tokenVerify, getUserPosts)
 router.route('/getPosts/:page/:pageSize').get(tokenVerify, feedPosts)
 router.route("/:post_id")
     .get(getPost)

@@ -49,7 +49,11 @@ const loadPosts = async (page: number, pageSize: number) => {
 }
 const addPost = async (title: string, body: string, user_id: string) => {
     try {
-        const user = await User.findById(new mongoose.Types.ObjectId(user_id))
+        const user = await User.findByIdAndUpdate(new mongoose.Types.ObjectId(user_id), {
+            $inc: {
+                totalPost: 1
+            },
+        }, { new: true })
         const newPost = await Post.create({
             title, body, user_id, username: user!.username
         })
@@ -112,7 +116,7 @@ const searchPost = async (search: string, limit: number = 5) => {
         ]);
 
         return result;
-    } catch (error:any) {
+    } catch (error: any) {
         console.error("Error while searching posts:", error);
         throw new Error(`An error occurred while searching posts, error`);
     }
@@ -135,6 +139,8 @@ const getUserPosts = async (user_id: string, page: number, pageSize: number) => 
                             }
                         },
                         { $unwind: "$user" },
+                        { $skip: pageSize * (page - 1) },
+                        { $limit: pageSize },
                         {
                             $project: {
                                 title: 1,
@@ -169,7 +175,7 @@ const getUserPosts = async (user_id: string, page: number, pageSize: number) => 
             }
         ])
         if (posts) {
-            return posts
+            return posts[0]
         } else {
             return []
         }
@@ -236,7 +242,8 @@ const handleLikePost = async (_id: string, user_id: string) => {
                     new: true
                 }
             )
-            return { like, post }
+            if (!post) throw new Error("post not found")
+            return { like: post.likeCount }
         } else {
             const deletedLike = await Likes.findOneAndDelete(
                 { post_id: new mongoose.Types.ObjectId(_id), user_id: new mongoose.Types.ObjectId(user_id) }
@@ -249,9 +256,9 @@ const handleLikePost = async (_id: string, user_id: string) => {
                 {
                     new: true
                 }
-
             )
-            return { like, post, deletedLike }
+            if (!post) throw new Error("post not found")
+            return { like: post.likeCount }
         }
     } catch (error) {
         console.error(error)

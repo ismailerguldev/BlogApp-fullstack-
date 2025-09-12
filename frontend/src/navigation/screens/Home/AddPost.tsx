@@ -15,6 +15,8 @@ import {
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text/';
+import { useAppDispatch } from '@/src/redux/hooks';
+import { incPost } from '@/src/redux/slices/userSlice';
 export function AddPost() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [showAlertDialog2, setShowAlertDialog2] = useState(false)
@@ -22,6 +24,7 @@ export function AddPost() {
   const handleClose2 = () => setShowAlertDialog2(false)
   const [title, setTitle] = useState<string>("Lorem ipsum dolor sit amet!")
   const [body, setBody] = useState<string>("Lorem, ipsum dolor sit amet consectetur adipisicing elit. Omnis odit labore sapiente deserunt. Repellat placeat facilis quod, blanditiis sed possimus, nesciunt necessitatibus neque repudiandae, sequi ut beatae eveniet enim maxime")
+  const dispatch = useAppDispatch()
   const addPost = async () => {
     try {
       const token = await AsyncStorage.getItem("token")
@@ -35,6 +38,7 @@ export function AddPost() {
       }).then(() => {
         setShowAlertDialog(false)
         setShowAlertDialog2(true)
+        dispatch(incPost(1))
       })
     } catch (error: any) {
       throw new Error(error.message)

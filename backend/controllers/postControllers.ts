@@ -27,7 +27,7 @@ export const search = async (req: Request, res: Response) => {
     )
 }
 export const getUserPosts = async (req: AuthRequest, res: Response) => {
-    const posts = await PostActions.getUserPosts(req.user.user_id, 1, 2)
+    const posts = await PostActions.getUserPosts(req.user.user_id, parseInt(req.params.page), parseInt(req.params.pageSize))
     res.status(200).json(posts)
 }
 export const deletePost = async (req: AuthRequest, res: Response) => {

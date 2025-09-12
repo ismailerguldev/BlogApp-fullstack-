@@ -1,12 +1,12 @@
 import { Text } from '@react-navigation/elements';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Button, Dimensions, FlatList, RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { Button, Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { AuthContext } from '../../../auth/authContext';
 import { useNavigation } from '@react-navigation/native';
 import HeadingSection from '../../../components/HomeComponents/HeadingSection';
 import { Center } from '@/components/ui/center';
 import { Divider } from '@/components/ui/divider';
-import Blog from '@/src/components/HomeComponents/Blog';
+import Post from '@/src/components/HomeComponents/Post';
 import { VStack } from '@/components/ui/vstack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IPost } from '@/src/models/PostModel';
@@ -47,7 +47,7 @@ export function Home() {
         return
       }
       const posts = await res.json()
-      setPostFeed((prev) => [ ...prev,...posts.data]);
+      setPostFeed((prev) => [...prev, ...posts.data]);
       setPage(prev => prev + 1)
       if (page === posts.totalPages) {
         setLoadingMore(false)
@@ -69,14 +69,8 @@ export function Home() {
         ListHeaderComponent={HeadingSection}
         contentContainerStyle={{ paddingTop: insets.top * 1.4, padding: 20, paddingBottom: insets.bottom * 0.4 }}
         renderItem={({ item }) =>
-          <Blog
-            createdAt={item.createdAt}
-            body={item.body}
-            commentCount={item.commentCount}
-            likeCount={item.likeCount}
-            _id={item._id}
-            title={item.title}
-            username={item.username}
+          <Post
+            post={item}
           />}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

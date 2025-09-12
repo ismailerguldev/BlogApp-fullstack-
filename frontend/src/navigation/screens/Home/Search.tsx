@@ -47,7 +47,7 @@ export function Search() {
               <InputField placeholder="Enter Text here..." onChangeText={(text) => { search(text) }} />
             </Input>
           </Center>
-          <Divider />
+          <Divider className='my-4' />
         </View>
       }
     />
