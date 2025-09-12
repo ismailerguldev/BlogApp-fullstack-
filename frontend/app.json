@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "frontend-main",
+    "slug": "frontend-main",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "frontend",
+    "scheme": "frontendmain",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.frontend"
+      "bundleIdentifier": "com.frontendmain"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.frontend"
+      "package": "com.frontendmain"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,8 +31,7 @@
           "image": "./assets/splash-icon.png"
         }
       ],
-      "react-native-edge-to-edge",
-      "expo-font"
+      "react-native-edge-to-edge"
     ]
   }
 }

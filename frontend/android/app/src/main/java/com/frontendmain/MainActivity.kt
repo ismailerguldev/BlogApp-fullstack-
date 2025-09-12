@@ -1,4 +1,4 @@
-package com.frontend
+package com.frontendmain
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

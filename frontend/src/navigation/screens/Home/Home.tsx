@@ -10,8 +10,8 @@ import Post from '@/src/components/HomeComponents/Post';
 import { VStack } from '@/components/ui/vstack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IPost } from '@/src/models/PostModel';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Spinner } from '@/components/ui/spinner';
+import AsyncStorage from "@react-native-async-storage/async-storage"
 export function Home() {
   const insets = useSafeAreaInsets()
   const [postFeed, setPostFeed] = useState<IPost[]>([])
