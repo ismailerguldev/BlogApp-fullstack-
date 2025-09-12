@@ -15,9 +15,9 @@ export const AuthContext = createContext<IContext>(
     {
         isAuth: false,
         isVerified: false,
-        signIn: async () => {},
-        signOut: async () => {},
-        verificateEmail: async () => {}
+        signIn: async () => { },
+        signOut: async () => { },
+        verificateEmail: async () => { }
     }
 );
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -93,11 +93,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
     const signOut = async () => {
-        // çıkış yapılıyor
-        dispatch(removeUser())
-        setIsAuth(false)
-        setIsVerified(false)
-        await AsyncStorage.removeItem("token")
+        const token = await AsyncStorage.getItem("token") as string
+        await fetch("http://192.168.1.76:5000/user/logout", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        }).then(
+            async () => {
+                dispatch(removeUser())
+                setIsAuth(false)
+                setIsVerified(false)
+                await AsyncStorage.removeItem("token")
+            }
+        ).catch(error => error)
     }
     return (
         <AuthContext.Provider value={{ isAuth, isVerified, signIn, signOut, verificateEmail }}>

@@ -10,7 +10,7 @@ import redisClient from "../../config/redis.ts";
 import { config } from "../../config/config.ts";
 const registerUser = async (username: string, email: string, password: string) => {
     try {
-        const existingUser = await User.findOne({ email })
+        const existingUser = await User.findOne({ email, username })
         if (existingUser) throw new Error("This user already registered.")
         const hashedPassword = await bcrypt.hash(password, 10)
         const user = await User.create({
@@ -46,6 +46,14 @@ const verifyUser = async (user_id: string, verificationCode: string) => {
             totalPost: user.totalPost
         },
         token: token
+    }
+}
+const logoutUser = async (user_id: string) => {
+    try {
+        const user = await User.findByIdAndUpdate(user_id, { emailVerified: false }, { new: true })
+        return user
+    } catch (error: any) {
+        throw new Error(`An error occured while logout. ${error}`)
     }
 }
 const autoLogin = async (token: string) => {
@@ -142,7 +150,7 @@ const handleFollow = async (follower_id: string, followed_id: string) => {
             return { follow, unFollowedUser, unFollowerUser, deleteFollow }
         }
     }
-    catch (error) {
+    catch (error: any) {
         throw new Error(error)
     }
 }
@@ -157,7 +165,7 @@ const changeUsername = async (user_id: string, username: string) => {
             }
         )
         return user
-    } catch (error) {
+    } catch (error: any) {
         throw new Error(error)
     }
 }
@@ -177,4 +185,4 @@ const changePassword = async (user_id: string, password: string) => {
         console.log(error)
     }
 }
-export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser, autoLogin }
+export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser, autoLogin, logoutUser }

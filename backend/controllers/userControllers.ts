@@ -14,6 +14,10 @@ export const verify = async (req: Request, res: Response) => {
     const user = await UserActions.verifyUser(req.body.user_id, req.body.code)
     res.status(200).json(user)
 }
+export const logout = async (req: AuthRequest, res: Response) => {
+    const user = await UserActions.logoutUser(req.user.user_id)
+    res.status(200).json(user)
+}
 export const login = async (req: Request, res: Response) => {
     const { user } = await UserActions.loginUser(req.body.email, req.body.password)
     res.status(200).json(user)

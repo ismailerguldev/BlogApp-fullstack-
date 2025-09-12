@@ -12,6 +12,7 @@ const loadPosts = async (page: number, pageSize: number) => {
                 {
                     data:
                         [
+                            { $match: { isPrivate: false } },
                             { $sort: { createdAt: -1 } },
                             { $skip: pageSize * (page - 1) },
                             { $limit: pageSize },
@@ -65,7 +66,9 @@ const addPost = async (title: string, body: string, user_id: string) => {
 }
 const getPost = async (id: string) => {
     try {
-        const post = await Post.findById(id)
+        const post = await Post.findOne(
+            { isPrivate: false, _id: new mongoose.Types.ObjectId(id) }
+        )
         if (post) {
             return post
         } else {
@@ -103,6 +106,7 @@ const searchPost = async (search: string, limit: number = 5) => {
                     }
                 }
             },
+            { $match: { isPrivate: false } },
             { $sort: { createdAt: -1 } },
             { $limit: limit },
             {
@@ -260,7 +264,7 @@ const handleLikePost = async (_id: string, user_id: string) => {
             if (!post) throw new Error("post not found")
             return { like: post.likeCount }
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error)
         throw new Error(error)
     }

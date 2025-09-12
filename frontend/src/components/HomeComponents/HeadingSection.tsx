@@ -9,9 +9,11 @@ import { Bell, Box, ChevronDownIcon, ChevronUpIcon, Search } from 'lucide-react-
 import { Divider } from '@/components/ui/divider'
 import { VStack } from '@/components/ui/vstack'
 import { useAppSelector } from '@/src/redux/hooks'
+import { useNavigation } from '@react-navigation/native'
 const HeadingSection = () => {
     const { width, height } = Dimensions.get("screen")
     const user = useAppSelector((state) => state.user)
+    const navigation = useNavigation()
     return (
         <HStack className='justify-between items-center p-5 rounded-xl' style={{ backgroundColor: "#272727" }}>
             <HStack className='gap-5 items-center'>
@@ -29,7 +31,7 @@ const HeadingSection = () => {
                 </VStack>
             </HStack>
             <HStack className='gap-5'>
-                <Search size={28} color={"white"} />
+                <Search size={28} color={"white"} onPress={() => navigation.navigate("HomeStack", { screen: "HomeTabs", params: { screen: "Search" } })} />
                 <Bell size={28} color={"white"} />
             </HStack>
         </HStack>
