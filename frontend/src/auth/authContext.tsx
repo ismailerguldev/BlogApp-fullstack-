@@ -10,6 +10,7 @@ interface IContext {
     signIn: (email: string, password: string) => Promise<any>,
     verificateEmail: (user_id: string, code: string) => Promise<any>
     signOut: () => Promise<void>
+    register: (username: string, email: string, password: string) => Promise<any>
 }
 export const AuthContext = createContext<IContext>(
     {
@@ -17,7 +18,8 @@ export const AuthContext = createContext<IContext>(
         isVerified: false,
         signIn: async () => { },
         signOut: async () => { },
-        verificateEmail: async () => { }
+        verificateEmail: async () => { },
+        register: async () => { }
     }
 );
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -50,6 +52,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await tryAutoLogin()
         })()
     }, [])
+    const register = async (username: string, email: string, password: string) => {
+        try {
+            const res = await fetch("http://192.168.1.76:5000/user/register",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, email, password })
+                }
+            )
+            const data = await res.json()
+            if (data) {
+                return data
+            }
+        } catch (error: any) {
+            throw new Error("An error occured while register", error)
+        }
+    }
     const signIn = async (email: string, password: string) => {
         try {
             const res = await fetch("http://192.168.1.76:5000/user/login",
@@ -110,7 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ).catch(error => error)
     }
     return (
-        <AuthContext.Provider value={{ isAuth, isVerified, signIn, signOut, verificateEmail }}>
+        <AuthContext.Provider value={{ isAuth, isVerified, signIn, signOut, verificateEmail, register }}>
             {children}
         </AuthContext.Provider>
     )

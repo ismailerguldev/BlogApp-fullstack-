@@ -14,7 +14,7 @@ import { User } from "lucide-react-native"
 import { useNavigation } from '@react-navigation/native';
 export function AuthScreen() {
   const { width, height } = Dimensions.get("screen")
-  const { signIn } = useContext(AuthContext)
+  const { signIn, register } = useContext(AuthContext)
   const [username, setUsername] = useState<string>("")
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
@@ -23,6 +23,9 @@ export function AuthScreen() {
   const navigation = useNavigation()
   const logIn = async () => {
     await signIn(email, password).then((data) => navigation.navigate("AuthStack", { screen: "EmailVerificationScreen", params: { user_id: data.user_id } })).catch(error => console.log(error))
+  }
+  const registerUser = async () => {
+    await register(username, email, password).then((data) => setIsSignUp(false)).then(() => console.log("kayıt olma başarılı.")).catch(error => console.log(error))
   }
   return (
     <Center className='w-full h-full' style={{ backgroundColor: "#17181c" }}>
@@ -111,7 +114,7 @@ export function AuthScreen() {
             </VStack>
           </FormControl>
           <VStack className='gap-4'>
-            <TouchableOpacity onPress={logIn} style={{ width: width * 0.6, justifyContent: "center", alignItems: "center", backgroundColor: "#2E2E2E", borderRadius: 5, alignSelf: "center", padding: 15 }}>
+            <TouchableOpacity onPress={isSignUp ? registerUser : logIn} style={{ width: width * 0.6, justifyContent: "center", alignItems: "center", backgroundColor: "#2E2E2E", borderRadius: 5, alignSelf: "center", padding: 15 }}>
               <Text className='text-white'>{isSignUp ? "Sign Up" : "Sign In"}</Text>
             </TouchableOpacity>
             <TouchableOpacity className='self-center p-3' onPress={() => setIsSignUp(value => !value)}>

@@ -12,7 +12,7 @@ const BlogDetail = ({ route }: Props) => {
     const post = route.params.Post
     return (
         <KeyboardAvoidingView behavior='padding' style={{ flex: 1, backgroundColor: "#17181c", justifyContent:"center", alignItems:"center" }}>
-                <Text style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>Your Post Detail</Text>
+                <Text style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>Post Detail</Text>
                 <Post
                     post={post} />
         </KeyboardAvoidingView>

@@ -19,6 +19,7 @@ import Profile from './screens/Home/Profile';
 import { User } from 'lucide-react-native';
 import EmailVerificationScreen from './screens/Auth/EmailVerificationScreen';
 import BlogDetail from './screens/Home/PostDetail';
+import UserProfile from './screens/Home/UserProfile';
 
 const useIsSignedIn = () => {
   const { isAuth, isVerified } = useContext(AuthContext)
@@ -101,6 +102,9 @@ const HomeStack = createNativeStackNavigator({
     },
     BlogDetail: {
       screen: BlogDetail
+    },
+    UserProfile: {
+      screen: UserProfile
     }
   }
 })

@@ -27,8 +27,12 @@ export const search = async (req: Request, res: Response) => {
     )
 }
 export const getUserPosts = async (req: AuthRequest, res: Response) => {
-    const posts = await PostActions.getUserPosts(req.user.user_id, parseInt(req.params.page), parseInt(req.params.pageSize))
+    const posts = await PostActions.getUserPosts(req.query.user_id ? req.query.user_id as string : null, parseInt(req.params.page), parseInt(req.params.pageSize), req.user.user_id)
     res.status(200).json(posts)
+}
+export const handlePrivate = async (req: AuthRequest, res: Response) => {
+    const result = await PostActions.handlePrivate(req.params.post_id, req.user.user_id)
+    res.status(200).json(result)
 }
 export const deletePost = async (req: AuthRequest, res: Response) => {
     const deleted = await PostActions.delPost(req.params.post_id, req.user.user_id)
@@ -43,7 +47,7 @@ export const likePost = async (req: AuthRequest, res: Response) => {
     res.status(200).json(likeInfo)
 }
 export const addComment = async (req: AuthRequest, res: Response) => {
-    const commentInfo = await PostActions.addComment(req.params.post_id, req.user.user_id, req.body.comment)
+    const commentInfo = await PostActions.addComment(req.params.post_id, req.user.user_id, req.body.comment, req.body.username)
     res.status(200).json(commentInfo)
 }
 export const editComment = async (req: AuthRequest, res: Response) => {
@@ -65,4 +69,8 @@ export const editReply = async (req: AuthRequest, res: Response) => {
 export const deleteReply = async (req: AuthRequest, res: Response) => {
     const deleteInfo = await PostActions.deleteReply(req.params.reply_id, req.user.user_id)
     res.status(200).json(deleteInfo)
+}
+export const getComments = async (req: Request, res: Response) => {
+    const result = await PostActions.getComments(req.params.post_id, parseInt(req.params.page), parseInt(req.params.pageSize))
+    return res.status(200).json(result)
 }

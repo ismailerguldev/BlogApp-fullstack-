@@ -65,7 +65,7 @@ export function Home() {
   }, [])
   return (
     <View style={{ flex: 1, backgroundColor: "#17181c" }}>
-      <FlatList data={postFeed} keyExtractor={(item) => item._id}
+      <FlatList nestedScrollEnabled data={postFeed} keyExtractor={(item) => item._id}
         ListHeaderComponent={HeadingSection}
         contentContainerStyle={{ paddingTop: insets.top * 1.4, padding: 20, paddingBottom: insets.bottom * 0.4 }}
         renderItem={({ item }) =>

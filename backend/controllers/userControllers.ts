@@ -62,3 +62,12 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
         }
     )
 }
+export const getUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const result = await UserActions.getUser(req.params.user_id)
+        if (!result) throw new Error("user not found")
+        res.status(200).json(result)
+    } catch (error) {
+        console.error(error)
+    }
+}

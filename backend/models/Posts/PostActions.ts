@@ -38,7 +38,8 @@ const loadPosts = async (page: number, pageSize: number) => {
                         }
                     },
                     page: { $literal: page },
-                    pageSize: { $literal: pageSize }
+                    pageSize: { $literal: pageSize },
+                    isPrivate: 1,
                 }
             }
         ])
@@ -126,21 +127,28 @@ const searchPost = async (search: string, limit: number = 5) => {
     }
 };
 
-const getUserPosts = async (user_id: string, page: number, pageSize: number) => {
+const getUserPosts = async (user_id: string | null, page: number, pageSize: number, req_id: string) => {
     try {
+        const targetUserId = user_id ? new mongoose.Types.ObjectId(user_id) : new mongoose.Types.ObjectId(req_id);
+
+        const match: any = { user_id: targetUserId };
+        if (user_id && !new mongoose.Types.ObjectId(req_id).equals(targetUserId)) {
+            match.isPrivate = false;
+        }
+
         const posts = await Post.aggregate([
             {
                 $facet: {
                     data: [
-                        { $match: { user_id: new mongoose.Types.ObjectId(user_id), isPrivate: false } },
-                        { $sort: { createdAt: -1, } },
+                        { $match: match },
+                        { $sort: { createdAt: -1 } },
                         {
                             $lookup: {
                                 from: "users",
                                 localField: "user_id",
                                 foreignField: "_id",
-                                as: "user"
-                            }
+                                as: "user",
+                            },
                         },
                         { $unwind: "$user" },
                         { $skip: pageSize * (page - 1) },
@@ -149,45 +157,41 @@ const getUserPosts = async (user_id: string, page: number, pageSize: number) => 
                             $project: {
                                 title: 1,
                                 body: 1,
-                                "user.username": 1,
-                                "user.email": 1,
-                            }
-                        }
+                                username: 1,
+                                isPrivate: 1,
+                                likeCount: 1,
+                                commentCount: 1,
+                                user_id: 1,
+                            },
+                        },
                     ],
                     totalCount: [
-                        { $match: { user_id: new mongoose.Types.ObjectId(user_id), isPrivate: false } },
-                        { $count: "count" }
-                    ]
-                }
+                        { $match: match },
+                        { $count: "count" },
+                    ],
+                },
             },
             {
-                $project:
-                {
+                $project: {
                     data: 1,
-                    total:
-                        { $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] },
-                    totalPages:
-                    {
-                        $ceil:
-                        {
-                            $divide: [{ $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] }, pageSize]
-                        }
+                    total: { $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] },
+                    totalPages: {
+                        $ceil: {
+                            $divide: [{ $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] }, pageSize],
+                        },
                     },
                     page: { $literal: page },
-                    pageSize: { $literal: pageSize }
-                }
-            }
-        ])
-        if (posts) {
-            return posts[0]
-        } else {
-            return []
-        }
+                    pageSize: { $literal: pageSize },
+                },
+            },
+        ]);
+
+        return posts.length > 0 ? posts[0] : { data: [], total: 0, totalPages: 0, page, pageSize };
     } catch (error) {
-        console.error("An error occured while getting user posts", error)
-        return []
+        console.error("An error occurred while getting user posts", error);
+        return { data: [], total: 0, totalPages: 0, page, pageSize };
     }
-}
+};
 
 const delPost = async (_id: string, user_id: string) => {
     try {
@@ -199,7 +203,8 @@ const delPost = async (_id: string, user_id: string) => {
             throw new Error("You haven't access to delete this post!")
         }
         const deleted = await Post.deleteOne({ _id })
-        return deleted
+        const user = await User.findByIdAndUpdate(new mongoose.Types.ObjectId(user_id), { $inc: { totalPost: -1 } })
+        return [user, deleted]
     } catch (error) {
         console.error(error)
     }
@@ -228,7 +233,22 @@ const updatePost = async (_id: string, user_id: string, data: { title: string, b
         return {}
     }
 }
-
+const handlePrivate = async (_id: string, user_id: string) => {
+    try {
+        const post = await Post.findOne(
+            {
+                _id: new mongoose.Types.ObjectId(_id),
+                user_id: new mongoose.Types.ObjectId(user_id)
+            },
+        )
+        if (!post) throw new Error("Post not found.")
+        post.isPrivate = !post.isPrivate
+        await post.save()
+        return post
+    } catch (error: any) {
+        throw new Error(error)
+    }
+}
 const handleLikePost = async (_id: string, user_id: string) => {
     try {
         const like = await Likes.findOneAndUpdate(
@@ -269,9 +289,10 @@ const handleLikePost = async (_id: string, user_id: string) => {
         throw new Error(error)
     }
 }
-const addComment = async (post_id: string, user_id: string, commentText: string) => {
+const addComment = async (post_id: string, user_id: string, commentText: string, username: string) => {
     try {
         const comment = await Comments.create({
+            username: username,
             post_id: new mongoose.Types.ObjectId(post_id),
             user_id: new mongoose.Types.ObjectId(user_id),
             commentText: commentText
@@ -412,4 +433,48 @@ const deleteReply = async (reply_id: string, user_id: string,) => {
         console.log(error)
     }
 }
-export default { loadPosts, addPost, getPost, searchPost, getUserPosts, delPost, updatePost, handleLikePost, addComment, editComment, deleteComment, addReply, editReply, deleteReply }
+const getComments = async (post_id: string, page: number, pageSize: number) => {
+    try {
+        const result = await Comments.aggregate([
+            {
+                $facet:
+                {
+                    data:
+                        [
+                            { $match: { post_id: new mongoose.Types.ObjectId(post_id) } },
+                            { $sort: { commentAt: -1 } },
+                            { $skip: pageSize * (page - 1) },
+                            { $limit: pageSize },
+                            {
+                                $project:
+                                    { commentText: 1, replyCount: 1, username: 1, user_id: 1 }
+                            }
+                        ],
+                    totalCount: [{ $count: "count" }]
+                }
+            },
+            {
+                $project:
+                {
+                    data: 1,
+                    total:
+                        { $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] },
+                    totalPages:
+                    {
+                        $ceil:
+                        {
+                            $divide: [{ $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0] }, pageSize]
+                        }
+                    },
+                    page: { $literal: page },
+                    pageSize: { $literal: pageSize },
+                    isPrivate: 1,
+                }
+            }
+        ])
+        return result[0]
+    } catch (error) {
+        console.error(error)
+    }
+}
+export default { handlePrivate, getComments, loadPosts, addPost, getPost, searchPost, getUserPosts, delPost, updatePost, handleLikePost, addComment, editComment, deleteComment, addReply, editReply, deleteReply }

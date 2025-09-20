@@ -63,7 +63,7 @@ function Profile({ route }: Props) {
     try {
       const token = await getToken()
       const pageSize = 5
-      const res = await fetch(`http://192.168.1.76:5000/post/getPosts/${page}/${pageSize}`, {
+      const res = await fetch(`http://192.168.1.76:5000/post/user/${page}/${pageSize}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -88,6 +88,7 @@ function Profile({ route }: Props) {
   }
   useEffect(() => {
     (async () => {
+      console.log(followings)
       await getPosts()
     })()
   }, [])
@@ -158,9 +159,6 @@ function Profile({ route }: Props) {
                 <Text style={{ color: "white", fontSize: 16, }}>Followings</Text>
               </VStack>
             </HStack>
-            <TouchableOpacity style={{ width: width * 0.6, justifyContent: "center", alignItems: "center", backgroundColor: "#2E2E2E", borderRadius: 5, alignSelf: "center", padding: 15 }}>
-              <Text style={{ color: "white" }}>Follow</Text>
-            </TouchableOpacity>
             <Divider />
           </VStack>
         </>

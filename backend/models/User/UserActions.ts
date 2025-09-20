@@ -25,6 +25,16 @@ const registerUser = async (username: string, email: string, password: string) =
         throw new Error(`An error occured while register user ${error}`)
     }
 }
+const getUser = async (user_id: string) => {
+    try {
+        const user = await User.findOne({ _id: new mongoose.Types.ObjectId(user_id) })
+        if (!user) throw new Error("user not found")
+        return user
+    } catch (error) {
+        console.error(error)
+        return
+    }
+}
 const verifyUser = async (user_id: string, verificationCode: string) => {
     const storedCode = await redisClient.get(`verify:${user_id}`)
     if (!storedCode) throw new Error("Code Expired")
@@ -120,7 +130,7 @@ const handleFollow = async (follower_id: string, followed_id: string) => {
                     }
                 }
             )
-            return { follow, followedUser, followerUser }
+            return { message: "FOLLOW" }
         } else {
             const deleteFollow = await Follow.findOneAndDelete(
                 { follower_id: new mongoose.Types.ObjectId(follower_id), followed_id: new mongoose.Types.ObjectId(followed_id) }
@@ -147,7 +157,7 @@ const handleFollow = async (follower_id: string, followed_id: string) => {
                     new: true
                 },
             )
-            return { follow, unFollowedUser, unFollowerUser, deleteFollow }
+            return { message: "UNFOLLOW" }
         }
     }
     catch (error: any) {
@@ -185,4 +195,4 @@ const changePassword = async (user_id: string, password: string) => {
         console.log(error)
     }
 }
-export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser, autoLogin, logoutUser }
+export default { registerUser, loginUser, handleFollow, changeUsername, changePassword, verifyUser, autoLogin, logoutUser, getUser }
