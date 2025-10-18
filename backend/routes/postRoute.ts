@@ -26,5 +26,6 @@ router.route("/:reply_id/reply")
     .put(tokenVerify, editReply)
     .delete(tokenVerify, deleteReply)
 router.route("/comments/:post_id/:page/:pageSize")
-    
+    .get(getComments)
+
 export default router
